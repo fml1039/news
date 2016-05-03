@@ -12,4 +12,8 @@ This scraper intends to use selenium package to start a Firefox browser and obta
 
 ## Files
 * `test.py` - For testing functions use
-* `news.py` - The main program of this scraper
+* `gmw_scraper.py` - The main program of this scraper
+* `news_detail.csv` - the file that stores all news information
+
+### Note
+for digital ocean we have my edinburgh email address with fortran password there are $55 in the account
