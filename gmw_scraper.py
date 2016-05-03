@@ -65,10 +65,14 @@ def submit_search_options(my_browser, element):
     select_submit = my_browser.find_element_by_id(str(element))
     select_submit.submit()
 
+def parse_search_result(html):
+    soup = BeautifulSoup(html)
+    print soup
+
 
 if __name__ == '__main__':
     my_browser = browser_start(search_url)
     set_search_options(my_browser, my_key_words, begin_time, end_time, source, search_mode)
     submit_search_options(my_browser, 'source')
-
-    #browser.quit()  
+    parse_search_result(my_browser.page_source)
+    my_browser.quit()  
