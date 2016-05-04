@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[42]:
+# In[61]:
 
 
 # Author: Schicheng Zhang (bottle1039@gmail.com) <--- if you have a more permanent email messsage use that
@@ -21,17 +21,16 @@ import os.path, os
 from httplib import BadStatusLine
 
 
-# In[43]:
+# In[120]:
 
 file_location = ''
 
 # Parameters definition
-my_key_words = "日本+地震"
-search_url = "http://zhannei.baidu.com/cse/search?q=@key&p=@page&s=16378496155419916178&entry=1&area=2"
+search_url = "http://news.ifeng.com/world/special/ribendizhen/content-2/list_0/@page.shtml"
 init_id = 1
 
 
-# In[44]:
+# In[121]:
 
 # Function for obtain job list
 def obtain_page_html(page_url):
@@ -46,28 +45,28 @@ def obtain_page_html(page_url):
     return page_html
 
 
-# In[45]:
+# In[122]:
 
-def construct_search_query(page_id, key_words, address):
-    search_query = str(address).replace('@page',str(page_id)).replace('@key', str(key_words))
+def construct_search_query(page_id, address):
+    search_query = str(address).replace('@page',str(page_id))
     return search_query
 
 
-# In[46]:
+# In[123]:
 
 def extract_search_information(result_object_list):
     result_str = ''
     for result_object in result_object_list:
-        result_object = BeautifulSoup(str(result_object), 'html.parser')
-        news_title = result_object.find('a').getText().encode('utf-8').replace('\n','').replace('\r','').replace(',','')
-        news_url = result_object.find('a')['href']
-        news_date = result_object.find('span',{'class':'c-showurl'}).getText().encode('utf-8').split('...')[1].replace('-','').replace(' ','')
+        #result_object = BeautifulSoup(str(result_object), 'html.parser')
+        news_title = result_object.getText().encode('utf-8').replace('\n','').replace('\r','').replace(',','')
+        news_url = result_object['href']
+        #news_date = result_object.find('span',{'class':'c-showurl'}).getText().encode('utf-8').split('...')[1].replace('-','').replace(' ','')
         #obtain_news_detail()
-        result_str = result_str + news_title + ',' + str(news_url) + ',' + news_date + '\n'
+        result_str = result_str + news_title + ',' + str(news_url) + '\n'
     return result_str
 
 
-# In[51]:
+# In[156]:
 
 def parse_search_result(result):
     output = open('result_list.csv', 'w')
@@ -76,13 +75,8 @@ def parse_search_result(result):
         print "No result found under current condition"
         return -1
     else:
-        result_number = result.find('span', {'class':'support-text-top'}).getText().encode('utf-8')
-        result_number =  int(re.sub('[^0-9]','',result_number))
-        if result_number > 750:
-            max_page=74
-        else:
-            max_page = result_number / 10
-    result_object_list = result.findAll('div', {'class':'result f s0'})
+        max_page = 127
+    result_object_list = BeautifulSoup(str(result.find('div',{'class':'newsList'}))).findAll('a', {'target':'_blank'})
     result_str  =''
     result_str = extract_search_information(result_object_list)
     output.write(result_str)
@@ -90,13 +84,13 @@ def parse_search_result(result):
     while i < max_page:
         result_str = ''
         page_id = i+1
-        next_query = construct_search_query(page_id, my_key_words, search_url)
+        next_query = construct_search_query(page_id, search_url)
         try:
             search_result = obtain_page_html(next_query)
             original_search_html = open('original_html/search_' + str(i) + '.htm', 'w')
             original_search_html.write(str(search_result))
             original_search_html.close()
-            result_object_list = search_result.findAll('div', {'class':'result f s0'})
+            result_object_list = BeautifulSoup(str(search_result.find('div',{'class':'newsList'}))).findAll('a', {'target':'_blank'})
             result_str = extract_search_information(result_object_list)
             i = i + 1
         except BadStatusLine:
@@ -106,56 +100,63 @@ def parse_search_result(result):
     return 0
 
 
-# In[52]:
+# In[173]:
 
 def extract_news_detail(news_list):
     detail_output = open('news_detail.csv', 'a')
     scraped_list = file('scraped_list.csv', 'r').readlines()
     scraped_output = open('scraped_list.csv', 'a')
-    news_id = len(scraped_list)
+    news_id = len(scraped_list)+1
     for news_info in news_list:
         # catch httperror to handle 404
         try:
             news_detail = ''
             scraped = ''
-            news = news_info.split('|')
-            if len(news) == 1:
-                print news
-            if (str(news[1]) + '\n') not in scraped_list and 'v.gmw.cn' not in news[1]:
+            news_date=''
+            news = news_info.replace('\n','').split(',')
+            if str(news[1] + '\n') not in scraped_list:
                 news_html = obtain_page_html(news[1])
-                if news_html.find('body', {'xmlns':'http://www.w3.org/1999/xhtml'}) != None:
-                    news_content = news_html.find('body', {'xmlns':'http://www.w3.org/1999/xhtml'}).getText().encode('utf-8').replace('\n','').replace('\r','')
-                elif news_html.find('div', {'id':'contentMain'}) != None:
-                    news_content = news_html.find('div', {'id':'contentMain'}).getText().encode('utf-8').replace('\n','').replace('\r','')
-                elif news_html.find('div', {'id':'ArticleContent'}) != None:
-                    news_content = news_html.find('div', {'id':'ArticleContent'}).getText().encode('utf-8').replace('\n','').replace('\r','')
-                elif news_html.find('td', {'id':'body'}) != None:
-                    news_content = news_html.find('td', {'id':'body'}).getText().encode('utf-8').replace('\n','').replace('\r','')
+                for script in news_html(["script", "style"]):
+                    script.extract() 
+                error_class = news_html.find('div',{'class':'mat'})
+                if error_class == None:
+                    news_content = news_html.find('div', {'id':'artical_real'}).findAll('p')
+                    my_content = ''
+                    for content in news_content:
+                        my_content = my_content + str(content.getText().encode('utf-8').replace('\n','').replace('\r',''))
+                    news_date = str(news[1]).split('/')[7] + str(news[1]).split('/')[8]
+                    news_date = str(re.sub('[^0-9]','',news_date))
+                    #print news_date
+                    news_detail = news_detail + news[0] + '|' + news_date + '|' + news[1].replace('\n','') + '|' + my_content + '\n'
+                    detail_output.write(news_detail)
+                    original_html = open('original_html/' + str(news_id) + '.htm', 'w')
+                    original_html.write(str(news_html))
+                    original_html.close()
+                    scraped = news[1] + '\n'
+                    scraped_output.write(str(scraped))
                 else:
-                    print 'new content format'
-                    detail_output.close()
-                    return 0
-                news_detail = news_detail + news[0] + '|' + news[1] + '|' + news[2].replace('\n','') + '|' + news_content + '\n'
-                detail_output.write(news_detail)
-                original_html = open('original_html/' + str(news_id) + '.htm', 'w')
-                original_html.write(str(news_html))
-                original_html.close()
-                scraped = news[1] + '\n'
-                scraped_output.write(str(scraped))
+                    print "page not found"
+                    scraped = news[1] + '\n'
+                    scraped_output.write(str(scraped))
             else:
                 print "scraped"
             news_id = news_id + 1
-        except urllib2.HTTPError, err:
+        except AttributeError:
             print "page not found"
-            news = news_info.split('|')
+            news = news_info.split(',')
+        except urllib2.HTTPError as err:
+            print "page not found"
+            news = news_info.split(',')
             scraped = news[1] + '\n'
             scraped_output.write(str(scraped))
+        except SocketError as e:
+            print "page not found"
     detail_output.close()
     scraped_output.close()
     print "news detail collected"
 
 
-# In[53]:
+# In[174]:
 
 def output_html_file(file_name, content):
     return 0
@@ -165,13 +166,13 @@ def construct_output_file_name(my_key_words, search_url, begin_time, end_time, s
 
 
 
-# In[54]:
+# In[ ]:
 
 if __name__ == '__main__':
 # Obtain current date
     dt = str(datetime.date.today() - datetime.timedelta(days=1)).replace('-', '')
     '''
-    my_query = construct_search_query(0, my_key_words, search_url)
+    my_query = construct_search_query(0, search_url)
     search_result = obtain_page_html(my_query)
     parse_search_result(search_result)
     '''
