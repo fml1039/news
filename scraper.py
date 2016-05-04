@@ -24,6 +24,7 @@ source = "光明网"
 search_url = "http://search.gmw.cn/search.do?c=n&cp=@page&q=@key&tt=false&to=true&sourceName=@source&beginTime=@begin&endTime=@end&adv=true&limitTime=0"
 #search_mode = "title"
 search_mode = "content"
+init_id = 1
 
 # Function for obtain job list
 def obtain_page_html(page_url):
@@ -33,7 +34,7 @@ def obtain_page_html(page_url):
     page_html = urllib2.urlopen(urllib2.Request(page_url)) 
 
     # Use beautifulsoup to parse the content
-    page_html = BeautifulSoup(page_html.read(),'html.parser')
+    page_html = BeautifulSoup(page_html.read(), 'html.parser')
     print 'Page obtained'
     return page_html
 
@@ -48,8 +49,8 @@ def construct_search_query(page_id, key_words, address, begin_time, end_time, se
 def extract_search_information(result_object_list):
     result_str = ''
     for result_object in result_object_list:
-        result_object = BeautifulSoup(str(result_object))
-        news_title = result_object.find('a').getText().encode('utf-8')
+        result_object = BeautifulSoup(str(result_object), 'html.parser')
+        news_title = result_object.find('a').getText().encode('utf-8').replace('\n','').replace('\r','')
         news_url = result_object.find('a')['href']
         news_date = result_object.find('span').getText().encode('utf-8').split(' ')[1].replace('-','')
         #obtain_news_detail()
@@ -76,31 +77,56 @@ def parse_search_result(result):
         page_id = i+1
         next_query = construct_search_query(page_id, my_key_words, search_url, begin_time, end_time, search_mode, source)
         search_result = obtain_page_html(next_query)
-        result_object_list = result.findAll('li', {'class':'media'})
+        result_object_list = search_result.findAll('li', {'class':'media'})
         result_str = extract_search_information(result_object_list)
         output.write(result_str)
     output.close()
     return 0
 
 def extract_news_detail(news_list):
-    detail_output = open('news_detail.csv', 'w')
+    detail_output = open('news_detail.csv', 'a')
+    scraped_list = file('scraped_list.csv', 'r').readlines()
+    scraped_output = open('scraped_list.csv', 'a')
+    news_id = len(scraped_list)
     for news_info in news_list:
-        news_detail = ''
-        news = news_info.split('|')
-        news_html = obtain_page_html(news[1])
-        if news_html.find('body', {'xmlns':'http://www.w3.org/1999/xhtml'}) != None:
-            news_content = news_html.find('body', {'xmlns':'http://www.w3.org/1999/xhtml'}).getText().encode('utf-8').replace('\n','')
-        elif news_html.find('div', {'id':'contentMain'}) != None:
-            news_content = news_html.find('div', {'id':'contentMain'}).getText().encode('utf-8').replace('\n','')
-        elif news_html.find('div', {'id':'ArticleContent'}) != None:
-            news_content = news_html.find('div', {'id':'ArticleContent'}).getText().encode('utf-8').replace('\n','')
-        else:
-            print 'new content format'
-            detail_output.close()
-            return 0
-        news_detail = news_detail + news[0] + '|' + news[1] + '|' + news[2] + '|' + news_content + '\n'
-        detail_output.write(news_detail)
+        # catch httperror to handle 404
+        try:
+            news_detail = ''
+            scraped = ''
+            news = news_info.split('|')
+            if len(news) == 1:
+                print news
+            if (str(news[1]) + '\n') not in scraped_list and 'v.gmw.cn' not in news[1]:
+                news_html = obtain_page_html(news[1])
+                if news_html.find('body', {'xmlns':'http://www.w3.org/1999/xhtml'}) != None:
+                    news_content = news_html.find('body', {'xmlns':'http://www.w3.org/1999/xhtml'}).getText().encode('utf-8').replace('\n','').replace('\r','')
+                elif news_html.find('div', {'id':'contentMain'}) != None:
+                    news_content = news_html.find('div', {'id':'contentMain'}).getText().encode('utf-8').replace('\n','').replace('\r','')
+                elif news_html.find('div', {'id':'ArticleContent'}) != None:
+                    news_content = news_html.find('div', {'id':'ArticleContent'}).getText().encode('utf-8').replace('\n','').replace('\r','')
+                elif news_html.find('td', {'id':'body'}) != None:
+                    news_content = news_html.find('td', {'id':'body'}).getText().encode('utf-8').replace('\n','').replace('\r','')
+                else:
+                    print 'new content format'
+                    detail_output.close()
+                    return 0
+                news_detail = news_detail + news[0] + '|' + news[1] + '|' + news[2].replace('\n','') + '|' + news_content + '\n'
+                detail_output.write(news_detail)
+                original_html = open('original_html/' + str(news_id) + '.htm', 'w')
+                original_html.write(str(news_html))
+                original_html.close()
+                scraped = news[1] + '\n'
+                scraped_output.write(str(scraped))
+            else:
+                print "scraped"
+            news_id = news_id + 1
+        except urllib2.HTTPError, err:
+            print "page not found"
+            news = news_info.split('|')
+            scraped = news[1] + '\n'
+            scraped_output.write(str(scraped))
     detail_output.close()
+    scraped_output.close()
     print "news detail collected"
 
 
