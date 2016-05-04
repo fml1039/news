@@ -12,7 +12,8 @@ This scraper intends to use selenium package to start a Firefox browser and obta
 
 ## Files
 * `test.py` - For testing functions use
-* `gmw_scraper.py` - The main program of this scraper
+* `gmw_scraper.py` - The scraper prototype of scraping data with Selenium
+* `scraper.py` - The scraper in traditional way of obtaining news information
 * `news_detail.csv` - the file that stores all news information
 
 ## How to run the scraper

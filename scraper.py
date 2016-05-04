@@ -2,11 +2,8 @@
 # Author: Schicheng Zhang (bottle1039@gmail.com) <--- if you have a more permanent email messsage use that
 '''
 This web scrapper allows one to scrape news information for a particular topic
- in a particular time. There is an alternative way to obtain search result from 
- this website, which is directly add parameters to the actual query url. However,
- for education reason, this scraper use selenium which requires a real browser
- to obtain search result. However, due to the difficulty in find the next page of 
- the search result, the developer decided to change to the traditional way.
+ in a particular time. This is the traditional way to obtain search result from 
+ this website, which is directly add parameters to the actual query url. 
 '''
 import datetime, time, bs4, urllib2, smtplib
 import re # for regular expression
