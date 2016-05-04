@@ -15,5 +15,11 @@ This scraper intends to use selenium package to start a Firefox browser and obta
 * `gmw_scraper.py` - The main program of this scraper
 * `news_detail.csv` - the file that stores all news information
 
+## How to run the scraper
+* This program relies on several python packages where a user need to install them manually before running the program.
+* Install pip
+* pip install bs4
+* pip install selenium
+
 ### Note
 for digital ocean we have my edinburgh email address with fortran password there are $55 in the account

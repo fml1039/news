@@ -1,8 +1,11 @@
 #-*- coding: utf-8 -*-
 # Author: Schicheng Zhang (bottle1039@gmail.com) <--- if you have a more permanent email messsage use that
 '''
-This web scrapper allows one to scrape news information for a particular topic in a particular time.
-
+This web scrapper allows one to scrape news information for a particular topic
+ in a particular time. There is an alternative way to obtain search result from 
+ this website, which is directly add parameters to the actual query url. However,
+ for education reason, this scraper use selenium which requires a real browser
+ to obtain search result
 '''
 import datetime, time, bs4, urllib2, smtplib
 import re # for regular expression
@@ -11,11 +14,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 import os.path, os
 
-
-#file_location = '/root/jobs-analysis/MSc/PPP/Scrapers/'
 file_location = ''
-
-
 
 # Parameters definition
 my_key_words = u"日本 地震"
@@ -67,7 +66,10 @@ def submit_search_options(my_browser, element):
 
 def parse_search_result(html):
     soup = BeautifulSoup(html)
-    print soup
+    search_result = open('result.html', 'w')
+    search_result.write(str(soup))
+    search_result.close()
+    
 
 
 if __name__ == '__main__':
@@ -75,4 +77,4 @@ if __name__ == '__main__':
     set_search_options(my_browser, my_key_words, begin_time, end_time, source, search_mode)
     submit_search_options(my_browser, 'source')
     parse_search_result(my_browser.page_source)
-    my_browser.quit()  
+    #my_browser.quit()  
