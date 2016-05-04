@@ -66,10 +66,21 @@ def submit_search_options(my_browser, element):
 
 def parse_search_result(html):
     soup = BeautifulSoup(html)
+    have_result = soup.find('p', {'class':'no_search'})
+    if have_result != None:
+        print "No result found under current condition"
+        return -1
+    else:
+        result_number = soup.find('div', {'class':'pull-left'}).getText().encode('utf-8').split('，')[0]
+        # Important!!! Note that the comma used in the previous statement to split the string is Chinese comma"，"
+        result_number =  int(re.sub('[^0-9]','',result_number))
+        print result_number
+    '''
+    # Output html to local file
     search_result = open('result.html', 'w')
     search_result.write(str(soup))
     search_result.close()
-    
+    '''
 
 
 if __name__ == '__main__':
