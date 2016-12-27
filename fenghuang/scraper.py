@@ -29,6 +29,8 @@ file_location = ''
 # Parameters definition
 #search_url = "http://news.ifeng.com/world/special/ribendizhen/content-2/list_0/@page.shtml"
 search_url = "http://news.ifeng.com/listpage/11574/@page/1/rtlist.shtml"
+start_date = 20161201
+end_date = 20161225
 #search_url2 = "http://news.ifeng.com/listpage/11574/@page/1/rtlist.shtml"
 init_id = 1
 
@@ -83,10 +85,10 @@ def parse_search_result(result):
     result_str  =''
     result_str = extract_search_information(result_object_list)
     output.write(result_str)
-    i = 20161201
-    while i in range(20161201,20161225):
+    i = start_date
+    while i in range(start_date,end_date):
         result_str = ''
-        page_id = i
+        page_id = i+1
         next_query = construct_search_query(page_id, search_url)
         try:
             search_result = obtain_page_html(next_query)
@@ -175,7 +177,7 @@ if __name__ == '__main__':
 # Obtain current date
     dt = str(datetime.date.today() - datetime.timedelta(days=1)).replace('-', '')
     
-    my_query = construct_search_query(0, search_url)
+    my_query = construct_search_query(start_date, search_url)
     search_result = obtain_page_html(my_query)
     parse_search_result(search_result)
     
