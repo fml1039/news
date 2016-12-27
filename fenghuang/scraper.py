@@ -43,9 +43,9 @@ def obtain_page_html(page_url):
     print ('start download from')
     print page_url
     page_html = urllib2.urlopen(urllib2.Request(page_url)) 
-
+    page_html = page_html.read().replace("</scr' + 'ipt>","</script>").replace('</"+"script>','</script>')
     # Use beautifulsoup to parse the content
-    page_html = BeautifulSoup(page_html.read().replace("</scr' + 'ipt>","</script>"), 'html.parser')
+    page_html = BeautifulSoup(page_html, 'html.parser')
     print 'Page obtained'
     return page_html
 
