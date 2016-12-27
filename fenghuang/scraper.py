@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[61]:
+# In[ ]:
 
 
 # Author: Schicheng Zhang (bottle1039@gmail.com) <--- if you have a more permanent email messsage use that
@@ -15,22 +15,25 @@ Note there can be replicated data as the website post the same article in differ
 import datetime, time, bs4, urllib2, smtplib
 import re # for regular expression
 from bs4 import BeautifulSoup
-from selenium import webdriver  
-from selenium.webdriver.support.ui import Select
+#from selenium import webdriver  
+#from selenium.webdriver.support.ui import Select
 import os.path, os
 from httplib import BadStatusLine
+from socket import error as SocketError
 
 
-# In[120]:
+# In[ ]:
 
 file_location = ''
 
 # Parameters definition
-search_url = "http://news.ifeng.com/world/special/ribendizhen/content-2/list_0/@page.shtml"
+#search_url = "http://news.ifeng.com/world/special/ribendizhen/content-2/list_0/@page.shtml"
+search_url = "http://news.ifeng.com/listpage/11574/@page/1/rtlist.shtml"
+#search_url2 = "http://news.ifeng.com/listpage/11574/@page/1/rtlist.shtml"
 init_id = 1
 
 
-# In[121]:
+# In[ ]:
 
 # Function for obtain job list
 def obtain_page_html(page_url):
@@ -45,14 +48,14 @@ def obtain_page_html(page_url):
     return page_html
 
 
-# In[122]:
+# In[ ]:
 
 def construct_search_query(page_id, address):
     search_query = str(address).replace('@page',str(page_id))
     return search_query
 
 
-# In[123]:
+# In[ ]:
 
 def extract_search_information(result_object_list):
     result_str = ''
@@ -66,7 +69,7 @@ def extract_search_information(result_object_list):
     return result_str
 
 
-# In[156]:
+# In[ ]:
 
 def parse_search_result(result):
     output = open('result_list.csv', 'w')
@@ -80,10 +83,10 @@ def parse_search_result(result):
     result_str  =''
     result_str = extract_search_information(result_object_list)
     output.write(result_str)
-    i = 0
-    while i < max_page:
+    i = 20161201
+    while i in range(20161201,20161225):
         result_str = ''
-        page_id = i+1
+        page_id = i
         next_query = construct_search_query(page_id, search_url)
         try:
             search_result = obtain_page_html(next_query)
@@ -100,7 +103,7 @@ def parse_search_result(result):
     return 0
 
 
-# In[173]:
+# In[ ]:
 
 def extract_news_detail(news_list):
     detail_output = open('news_detail.csv', 'a')
@@ -124,8 +127,8 @@ def extract_news_detail(news_list):
                     my_content = ''
                     for content in news_content:
                         my_content = my_content + str(content.getText().encode('utf-8').replace('\n','').replace('\r',''))
-                    news_date = str(news[1]).split('/')[7] + str(news[1]).split('/')[8]
-                    news_date = str(re.sub('[^0-9]','',news_date))
+                    news_date = str(news[1]).split('/')[4] 
+                    news_date = news_date[:4] + '-' + news_date[4:6] + '-' + news_date[6:]
                     #print news_date
                     news_detail = news_detail + news[0] + '|' + news_date + '|' + news[1].replace('\n','') + '|' + my_content + '\n'
                     detail_output.write(news_detail)
@@ -156,7 +159,7 @@ def extract_news_detail(news_list):
     print "news detail collected"
 
 
-# In[174]:
+# In[ ]:
 
 def output_html_file(file_name, content):
     return 0
@@ -171,27 +174,12 @@ def construct_output_file_name(my_key_words, search_url, begin_time, end_time, s
 if __name__ == '__main__':
 # Obtain current date
     dt = str(datetime.date.today() - datetime.timedelta(days=1)).replace('-', '')
-    '''
+    
     my_query = construct_search_query(0, search_url)
     search_result = obtain_page_html(my_query)
     parse_search_result(search_result)
-    '''
+    
     news_list = file('result_list.csv', 'r').readlines()
     extract_news_detail(news_list)
     
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
 
